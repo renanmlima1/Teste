@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OdontoSystem - Gestão de Clínica Odontológica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f9ff;
+        }
+        .login-container {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #075985 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(3, 105, 161, 0.3);
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .active-nav {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid white;
+        }
+        .table-row:hover {
+            background-color: #e0f2fe;
+        }
+        /* Custom styles for hiding columns */
+        .hide-commission-col th:nth-child(7),
+        .hide-commission-col td:nth-child(7) {
+            display: none;
+        }
+        .hide-actions-col th:nth-child(8),
+        .hide-actions-col td:nth-child(8) {
+            display: none;
+        }
+        /* Specific hide for dentists table actions for non-admin */
+        #dentists-table-main.hide-dentist-actions th:nth-child(6),
+        #dentists-table-main.hide-dentist-actions td:nth-child(6) {
+            display: none;
+        }
+        /* Specific hide for procedures table actions for non-admin */
+        #procedures-table-main.hide-actions th:nth-child(3),
+        #procedures-table-main.hide-actions td:nth-child(3) {
+            display: none;
+        }
+        /* Specific hide for payments table actions for non-admin */
+        #payments-table-main.hide-actions th:nth-child(3),
+        #payments-table-main.hide-actions td:nth-child(3) {
+            display: none;
+        }
+
+        /* Queue Modal Specific Styles */
+        .queue-modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result-item:hover {
+            background-color: #f0f9ff;
+        }
+        .selected-patient-display {
+            background-color: #e0f2fe;
+            border: 1px solid #90cdf4;
+            padding: 8px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen flex flex-col">
+        <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+            <div class="login-container w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+                <div class="p-8 text-white text-center">
+                    <h1 class="text-3xl font-bold mb-2">OdontoSystem</h1>
+                    <p class="text-blue-100">Sistema de Gestão para Clínicas Odontológicas</p>
+                </div>
+                <div class="bg-white p-8 rounded-t-3xl -mt-4">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Login</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuário/CPF</label>
+                            <input id="login-username" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Digite seu CPF ou usuário">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                            <input id="login-password" type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Digite sua senha">
+                        </div>
+                        <button id="login-btn" class="w-full btn-primary text-white py-2 px-4 rounded-lg font-medium">Entrar</button>
+                        <div class="text-center">
+                            <a href="#" id="show-register" class="text-sm text-blue-600 hover:text-blue-800">Novo dentista? Cadastre-se</a>
+                        </div>
+                        <div class="text-center">
+                            <a href="#" id="show-patient-registration-standalone" class="text-sm text-blue-600 hover:text-blue-800">Registar Paciente</a>
+                        </div>
+                        <div class="text-center">
+                            <a href="#" id="show-queue-display-standalone" class="text-sm text-blue-600 hover:text-blue-800">Visualizar Fila (Público)</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="register-page" class="min-h-screen flex items-center justify-center p-4 hidden">
+            <div class="login-container w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+                <div class="p-8 text-white text-center">
+                    <h1 class="text-3xl font-bold mb-2">OdontoSystem</h1>
+                    <p class="text-blue-100">Cadastro de Novo Dentista</p>
+                </div>
+                <div class="bg-white p-8 rounded-t-3xl -mt-4">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Cadastro</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input id="register-name" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Digite seu nome completo">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                            <input id="register-birth" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                            <input id="register-cpf" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Digite seu CPF">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">CRO</label>
+                            <input id="register-cro" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <button id="register-btn" class="w-full btn-primary text-white py-2 px-4 rounded-lg font-medium">Cadastrar</button>
+                        <div class="text-center">
+                            <a href="#" id="back-to-login" class="text-sm text-blue-600 hover:text-blue-800">Voltar para login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Registration Standalone Page -->
+        <div id="patient-registration-standalone-page" class="min-h-screen flex items-center justify-center p-4 hidden">
+            <div class="login-container w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+                <div class="p-8 text-white text-center">
+                    <h1 class="text-3xl font-bold mb-2">OdontoSystem</h1>
+                    <p class="text-blue-100">Registo de Novo Paciente</p>
+                </div>
+                <div class="bg-white p-8 rounded-t-3xl -mt-4">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Registar Paciente</h2>
+                    <form id="patient-registration-standalone-form" class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input id="patient-name-standalone" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Nome completo do paciente" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                            <input id="patient-cpf-standalone" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="CPF do paciente" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                            <input id="patient-birth-standalone" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                            <input id="patient-phone-standalone" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Telefone do paciente">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Morada</label>
+                            <input id="patient-address-standalone" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Morada do paciente">
+                        </div>
+                        <button type="submit" class="w-full btn-primary text-white py-2 px-4 rounded-lg font-medium">Registar Paciente</button>
+                    </form>
+                    <div class="text-center">
+                        <a href="#" id="back-to-login-from-patient" class="text-sm text-blue-600 hover:text-blue-800">Voltar para login</a>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 mt-8">Pacientes Registados</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patients-list-standalone" class="bg-white divide-y divide-gray-200">
+                                <!-- Patients will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Display Standalone Page -->
+        <div id="queue-display-standalone-page" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500 to-blue-700 text-white hidden">
+            <h1 class="text-5xl font-bold mb-8 text-center">Fila de Atendimento</h1>
+            <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl">
+                <h2 class="text-3xl font-semibold text-gray-800 mb-6 text-center">Próximo a Chamar:</h2>
+                <div id="next-patient-display" class="bg-blue-100 text-blue-800 text-4xl font-bold p-6 rounded-lg text-center mb-8 border-4 border-blue-500">
+                    Nenhum paciente na fila
+                </div>
+
+                <h3 class="text-2xl font-semibold text-gray-700 mb-4 text-center">Em Espera:</h3>
+                <div class="overflow-y-auto max-h-64 bg-gray-50 rounded-lg p-4">
+                    <ul id="public-queue-list" class="divide-y divide-gray-200 text-gray-800 text-lg">
+                        <!-- Queue items will be populated here -->
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <a href="#" id="back-to-login-from-queue-display" class="text-sm text-blue-200 hover:text-white">Voltar para Login</a>
+            </div>
+        </div>
+
+
+        <div id="main-app" class="hidden min-h-screen flex flex-col">
+            <header class="bg-white shadow-md">
+                <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        <h1 class="ml-2 text-xl font-bold text-gray-800">OdontoSystem</h1>
+                    </div>
+                    <div class="flex items-center">
+                        <span id="user-name" class="mr-4 text-gray-700"></span>
+                        <button id="logout-btn" class="text-gray-600 hover:text-gray-900">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex flex-1">
+                <aside class="w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white p-4">
+                    <nav class="mt-8 space-y-1">
+                        <a href="#" class="nav-item active-nav flex items-center px-4 py-3 rounded-lg" data-page="dashboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Dashboard
+                        </a>
+                        <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg" data-page="commission">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0-2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Cálculo de Comissão
+                        </a>
+                        <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg" data-page="history">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            Histórico
+                        </a>
+                        <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg" data-page="calculator">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Calculadora
+                        </a>
+                        <a href="#" id="specialist-report-nav" class="nav-item flex items-center px-4 py-3 rounded-lg hidden" data-page="specialist-report">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            Relatório Especialista
+                        </a>
+                        <a href="#" id="queue-management-nav" class="nav-item flex items-center px-4 py-3 rounded-lg hidden" data-page="queue-management">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                            </svg>
+                            Fila de Atendimento
+                        </a>
+                        <div id="admin-menu" class="hidden pt-4 mt-4 border-t border-blue-500">
+                            <p class="px-4 text-xs font-semibold text-blue-200 uppercase tracking-wider">Administração</p>
+                            <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg mt-2" data-page="dentists">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Dentistas
+                            </a>
+                            <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg" data-page="settings">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Configurações
+                            </a>
+                        </div>
+                    </nav>
+                </aside>
+
+                <main class="flex-1 p-6 overflow-auto">
+                    <div id="dashboard-page" class="page-content">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="card bg-white rounded-xl shadow-md p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-600">Total de Comissões</h3>
+                                        <p id="total-commission" class="text-2xl font-bold text-gray-800">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card bg-white rounded-xl shadow-md p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-600">Procedimentos</h3>
+                                        <p id="total-procedures" class="text-2xl font-bold text-gray-800">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card bg-white rounded-xl shadow-md p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0-2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-600">Valor Total</h3>
+                                        <p id="total-value" class="text-2xl font-bold text-gray-800">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Últimos Procedimentos</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procedimento</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comissão</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-procedures" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="commission-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Cálculo de Comissão</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <form id="commission-form" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Procedimento</label>
+                                        <select id="procedure" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Selecione um procedimento</option>
+                                            </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Valor do Procedimento (R$)</label>
+                                        <input id="procedure-value" type="number" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="0,00">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
+                                        <select id="payment-method" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                            </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Comissão</label>
+                                        <select id="commission-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Quem fez" data-percentage="25">Quem fez (25%)</option>
+                                            <option value="Quem vendeu" data-percentage="12.5">Quem vendeu (12,5%)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Dentista Responsável</label>
+                                        <select id="responsible-dentist" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Selecione o dentista</option>
+                                            </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Paciente</label>
+                                        <input id="patient-name" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Nome do paciente">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data do Atendimento</label>
+                                        <input id="service-date" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+
+                                <div class="bg-blue-50 p-4 rounded-lg mt-6">
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Resultado do Cálculo</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <p class="text-sm text-gray-600">Valor Líquido:</p>
+                                            <p id="net-value" class="text-lg font-semibold text-gray-800">R$ 0,00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Lucro:</p>
+                                            <p id="profit" class="text-lg font-semibold text-gray-800">R$ 0,00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Comissão:</p>
+                                            <p id="commission" class="text-lg font-semibold text-blue-600">R$ 0,00</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="button" id="calculate-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Calcular</button>
+                                    <button type="submit" id="save-commission-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="history-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Histórico de Procedimentos</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex flex-wrap gap-4 mb-6">
+                                <div class="flex-1 min-w-[200px]">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
+                                    <input id="start-date" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div class="flex-1 min-w-[200px]">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+                                    <input id="end-date" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div id="admin-dentist-filter" class="flex-1 min-w-[200px] hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Dentista</label>
+                                    <select id="dentist-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Todos</option>
+                                        </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button id="filter-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Filtrar</button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table id="history-table-main" class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procedimento</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma Pagamento</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                            <th id="history-commission-header" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comissão</th>
+                                            <th id="admin-history-actions-header" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-table-body" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total de Procedimentos:</p>
+                                        <p id="history-total-procedures" class="text-lg font-semibold text-gray-800">0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Soma dos Valores:</p>
+                                        <p id="history-total-value" class="text-lg font-semibold text-gray-800">R$ 0,00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Soma das Comissões:</p>
+                                        <p id="history-total-commission" class="text-lg font-semibold text-blue-600">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="calculator-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Calculadora de Parcelamento</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Desejado (R$)</label>
+                                    <input id="desired-value" type="number" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="0,00">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Número de Parcelas</label>
+                                    <select id="installments" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="1" data-tax="3.24">1x</option>
+                                        <option value="2" data-tax="4.54">2x</option>
+                                        <option value="3" data-tax="5.24">3x</option>
+                                        <option value="4" data-tax="5.94">4x</option>
+                                        <option value="5" data-tax="6.64">5x</option>
+                                        <option value="6" data-tax="7.34">6x</option>
+                                        <option value="7" data-tax="8.04">7x</option>
+                                        <option value="8" data-tax="8.74">8x</option>
+                                        <option value="9" data-tax="9.44">9x</option>
+                                        <option value="10" data-tax="10.14">10x</option>
+                                        <option value="11" data-tax="10.84">11x</option>
+                                        <option value="12" data-tax="11.54">12x</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <button id="calculate-installment-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Calcular</button>
+                            </div>
+
+                            <div id="installment-result" class="mt-6 p-6 bg-blue-50 rounded-lg hidden">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Resultado</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Valor a Cobrar:</p>
+                                        <p id="charge-value" class="text-2xl font-bold text-blue-600">R$ 0,00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Valor de Cada Parcela:</p>
+                                        <p id="installment-value" class="text-2xl font-bold text-gray-800">R$ 0,00</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-600">Taxa Aplicada:</p>
+                                    <p id="applied-tax" class="text-lg font-semibold text-gray-800">0%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Specialist Report Page -->
+                    <div id="specialist-report-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Relatório de Tratamentos Especialista</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Registar Tratamento Finalizado</h3>
+                            <form id="specialist-report-form" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Paciente</label>
+                                    <input id="patient-name-specialist" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Nome do paciente" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tratamento Realizado</label>
+                                    <input id="treatment-name-specialist" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Implante, Ortodontia" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Pago (R$)</label>
+                                    <input id="paid-value-specialist" type="number" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="0,00" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data do Tratamento</label>
+                                    <input id="treatment-date-specialist" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                <div class="flex justify-end space-x-3">
+                                    <button type="submit" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Registar Tratamento</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Sugestões de Tratamento ✨</h3>
+                            <div class="flex items-center space-x-4 mb-4">
+                                <button id="generate-suggestions-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Gerar Sugestões para Último Tratamento ✨</button>
+                                <div id="suggestions-loading-spinner" class="hidden animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                            <div id="suggestions-output" class="p-4 bg-blue-50 rounded-lg text-gray-700 hidden">
+                                <!-- Sugestões do Gemini API serão exibidas aqui -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Histórico de Tratamentos Finalizados</h3>
+                            <div class="overflow-x-auto mb-4">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tratamento</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comissão</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="specialist-report-table" class="bg-white divide-y divide-gray-200">
+                                        <!-- Relatórios de especialista serão populados aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total de Tratamentos:</p>
+                                        <p id="specialist-total-treatments" class="text-lg font-semibold text-gray-800">0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Soma dos Valores Pagos:</p>
+                                        <p id="specialist-total-paid-value" class="text-lg font-semibold text-gray-800">R$ 0,00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Soma das Comissões:</p>
+                                        <p id="specialist-total-commission" class="text-lg font-semibold text-blue-600">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="dentists-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Gerenciamento de Dentistas</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="mb-6">
+                                <button id="add-dentist-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Adicionar Dentista</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="dentists-table-main" class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CRO</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Nascimento</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialização</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="dentists-actions-header">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dentists-table" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Configurações</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow-md p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Procedimentos</h3>
+                                <div class="mb-4">
+                                    <button id="add-procedure-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Adicionar Procedimento</button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table id="procedures-table-main" class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Custo (R$)</th>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="procedures-actions-header">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="procedures-table" class="bg-white divide-y divide-gray-200">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-md p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Formas de Pagamento</h3>
+                                <div class="mb-4">
+                                    <button id="add-payment-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Adicionar Forma de Pagamento</button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table id="payments-table-main" class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taxa (%)</th>
+                                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="payments-actions-header">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="payments-table" class="bg-white divide-y divide-gray-200">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Queue Management Page -->
+                    <div id="queue-management-page" class="page-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Gestão da Fila de Atendimento</h2>
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Adicionar Paciente à Fila</h3>
+                            <div class="mb-4">
+                                <input type="text" id="queue-modal-search-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Buscar paciente por nome ou CPF...">
+                                <div id="queue-modal-search-results" class="bg-white border border-gray-300 rounded-lg mt-2 max-h-48 overflow-y-auto hidden">
+                                    <!-- Search results will appear here -->
+                                </div>
+                            </div>
+                            <div id="selected-patient-info" class="selected-patient-display mb-4 hidden">
+                                Paciente Selecionado: <span id="selected-patient-name"></span> (<span id="selected-patient-cpf"></span>)
+                            </div>
+                            <button id="add-to-queue-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium" disabled>Adicionar à Fila</button>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Fila Atual</h3>
+                            <div id="next-patient-call-display" class="bg-yellow-100 text-yellow-800 text-xl font-bold p-4 rounded-lg text-center mb-4 hidden">
+                                Próximo: <span id="called-patient-name"></span>
+                            </div>
+                            <div class="overflow-x-auto mb-4">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Entrada</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="current-queue-list" class="bg-white divide-y divide-gray-200">
+                                        <!-- Queue items will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button id="call-next-btn" class="btn-primary py-2 px-6 text-white rounded-lg font-medium">Chamar Próximo</button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <!-- Generic Dentist Modal (Add/Edit) -->
+            <div id="dentist-modal" class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md hidden">
+                <h3 id="dentist-modal-title" class="text-xl font-semibold text-gray-800 mb-4">Adicionar Dentista</h3>
+                <form id="dentist-form" class="space-y-4">
+                    <input type="hidden" id="modal-dentist-id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <input id="modal-dentist-name" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                        <input id="modal-dentist-birth" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                        <input id="modal-dentist-cpf" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CRO</label>
+                        <input id="modal-dentist-cro" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Especialização</label>
+                        <select id="modal-dentist-specialization" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="Clínico Geral">Clínico Geral</option>
+                            <option value="Especialista">Especialista</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancelar</button>
+                        <button type="submit" id="dentist-modal-submit-btn" class="btn-primary py-2 px-4 text-white rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Generic Procedure Modal (Add/Edit) -->
+            <div id="procedure-modal" class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md hidden">
+                <h3 id="procedure-modal-title" class="text-xl font-semibold text-gray-800 mb-4">Adicionar Procedimento</h3>
+                <form id="procedure-form" class="space-y-4">
+                    <input type="hidden" id="modal-procedure-id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Procedimento</label>
+                        <input id="modal-procedure-name" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Custo (R$)</label>
+                        <input id="modal-procedure-cost" type="number" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancelar</button>
+                        <button type="submit" id="procedure-modal-submit-btn" class="btn-primary py-2 px-4 text-white rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Generic Payment Method Modal (Add/Edit) -->
+            <div id="payment-modal" class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md hidden">
+                <h3 id="payment-modal-title" class="text-xl font-semibold text-gray-800 mb-4">Adicionar Forma de Pagamento</h3>
+                <form id="payment-form" class="space-y-4">
+                    <input type="hidden" id="modal-payment-id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                        <input id="modal-payment-name" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Taxa (%)</label>
+                        <input id="modal-payment-tax" type="number" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancelar</button>
+                        <button type="submit" id="payment-modal-submit-btn" class="btn-primary py-2 px-4 text-white rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Queue Modal (for adding patients to queue) -->
+            <div id="queue-modal" class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Adicionar Paciente à Fila</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar Paciente</label>
+                        <input type="text" id="queue-modal-search-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Nome ou CPF do paciente">
+                        <div id="queue-modal-search-results" class="bg-white border border-gray-300 rounded-lg mt-2 max-h-48 overflow-y-auto hidden">
+                            <!-- Search results will appear here -->
+                        </div>
+                    </div>
+                    <div id="queue-modal-selected-patient-info" class="selected-patient-display mb-4 hidden">
+                        Paciente Selecionado: <span id="queue-modal-selected-patient-name" class="font-semibold"></span> (<span id="queue-modal-selected-patient-cpf"></span>)
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancelar</button>
+                        <button type="button" id="add-selected-to-queue-btn" class="btn-primary py-2 px-4 text-white rounded-lg" disabled>Adicionar à Fila</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confirmation-modal" class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmação</h3>
+                <p id="confirmation-message" class="text-gray-600 mb-6">Tem certeza que deseja excluir este item?</p>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancelar</button>
+                    <button id="confirm-action" class="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirmar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+            <span id="toast-message">Operação realizada com sucesso!</span>
+        </div>
+    </div>
+
+    <script>
+        // Initialize data storage and current user state
+        const userData = {
+            currentUser: null,
+            users: [],
+            defaultUsers: [
+                { id: 1, name: 'Admin', cpf: 'admin', password: 'admin', role: 'admin', specialization: 'N/A' },
+                { id: 2, name: 'Dr. João Silva', cpf: '12345678900', password: '12345678900', role: 'dentist', specialization: 'Clínico Geral' },
+                { id: 3, name: 'Dra. Maria Oliveira', cpf: '98765432100', password: '98765432100', role: 'dentist', specialization: 'Especialista' },
+                { id: 4, name: 'Ana Recepcionista', cpf: 'recep', password: 'recep', role: 'receptionist' },
+                { id: 5, name: 'Visualizador Fila', cpf: 'fila', password: 'fila', role: 'queue_viewer' } // New queue viewer user
+            ],
+            defaultProcedures: [
+                { id: 1, name: 'Coroa Porcelana', cost: 500 },
+                { id: 2, name: 'PT', cost: 500 },
+            ],
+            defaultPaymentMethods: [
+                { id: 1, name: 'Dinheiro', tax: 0 },
+                { id: 2, name: 'Pix', tax: 0 },
+                { id: 3, name: 'Débito', tax: 0.94 },
+            ],
+            defaultRecords: [],
+            specialistReports: [],
+            patients: [], // Patient data
+            queue: [] // Queue data
+        };
+
+        // --- Local Storage Management ---
+        function loadFromLocalStorage(key, defaultValue) {
+            try {
+                const storedValue = localStorage.getItem(key);
+                return storedValue ? JSON.parse(storedValue) : defaultValue;
+            } catch (error) {
+                console.error(`Erro ao carregar ${key} do localStorage:`, error);
+                return defaultValue;
+            }
+        }
+
+        function saveToLocalStorage(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (error) {
+                console.error(`Erro ao guardar ${key} no localStorage:`, error);
+            }
+        }
+
+        // --- Utility Functions ---
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) {
+                return 'N/A';
+            }
+            const parts = String(dateString).split('-');
+            if (parts.length === 3 && !isNaN(parseInt(parts[0])) && !isNaN(parseInt(parts[1])) && !isNaN(parseInt(parts[2]))) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
+        }
+
+        let confirmActionCallback = null;
+
+        function showConfirmationModal(message, callback) {
+            const confirmationMessageEl = document.getElementById('confirmation-message');
+            const confirmationModalEl = document.getElementById('confirmation-modal');
+            const modalOverlayEl = document.getElementById('modal-overlay');
+
+            if (confirmationMessageEl) confirmationMessageEl.textContent = message;
+            confirmActionCallback = callback;
+            if (confirmationModalEl) confirmationModalEl.classList.remove('hidden');
+            if (modalOverlayEl) modalOverlayEl.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            const dentistModalEl = document.getElementById('dentist-modal');
+            const procedureModalEl = document.getElementById('procedure-modal');
+            const paymentModalEl = document.getElementById('payment-modal');
+            const queueModalEl = document.getElementById('queue-modal');
+            const confirmationModalEl = document.getElementById('confirmation-modal');
+            const modalOverlayEl = document.getElementById('modal-overlay');
+
+            if (dentistModalEl) dentistModalEl.classList.add('hidden');
+            if (procedureModalEl) procedureModalEl.classList.add('hidden');
+            if (paymentModalEl) paymentModalEl.classList.add('hidden');
+            if (queueModalEl) queueModalEl.classList.add('hidden');
+            if (confirmationModalEl) confirmationModalEl.classList.add('hidden');
+            if (modalOverlayEl) modalOverlayEl.classList.add('hidden');
+            confirmActionCallback = null;
+        }
+
+        function showToast(message, type = 'success') {
+            const toastMessageEl = document.getElementById('toast-message');
+            const toastEl = document.getElementById('toast');
+
+            if (!toastMessageEl || !toastEl) {
+                console.error("Elementos do toast não encontrados.");
+                return;
+            }
+
+            toastMessageEl.textContent = message;
+            toastEl.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
+            if (type === 'success') {
+                toastEl.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                toastEl.classList.add('bg-red-500');
+            } else if (type === 'info') {
+                toastEl.classList.add('bg-blue-500');
+            }
+
+            toastEl.classList.remove('opacity-0', 'translate-y-20');
+            toastEl.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toastEl.classList.remove('opacity-100', 'translate-y-0');
+                toastEl.classList.add('opacity-0', 'translate-y-20');
+            }, 3000);
+        }
+
+        // --- Core Application Functions ---
+        function handleLogin(e) {
+            console.log("handleLogin: Início da função.");
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            let user = null;
+            user = userData.users.find(u => u.cpf === username && u.password === password);
+
+            if (user) {
+                userData.currentUser = user;
+                const userNameEl = document.getElementById('user-name');
+                if (userNameEl) userNameEl.textContent = user.name;
+
+                console.log("handleLogin: Usuário autenticado. Ocultando páginas de login/registro.");
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('register-page').classList.add('hidden');
+                document.getElementById('patient-registration-standalone-page').classList.add('hidden');
+                document.getElementById('queue-display-standalone-page').classList.add('hidden');
+
+
+                const dashboardNavItem = document.querySelector('.nav-item[data-page="dashboard"]');
+                const dentistsNavItem = document.querySelector('.nav-item[data-page="dentists"]');
+                const settingsNavItem = document.querySelector('.nav-item[data-page="settings"]');
+                const specialistReportNavEl = document.getElementById('specialist-report-nav');
+                const queueManagementNavEl = document.getElementById('queue-management-nav');
+
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.add('hidden'));
+                const adminMenuEl = document.getElementById('admin-menu');
+                if (adminMenuEl) adminMenuEl.classList.add('hidden');
+
+                if (user.role === 'admin') {
+                    console.log("handleLogin: Perfil Admin.");
+                    if (dashboardNavItem) dashboardNavItem.classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="commission"]')) document.querySelector('.nav-item[data-page="commission"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="history"]')) document.querySelector('.nav-item[data-page="history"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="calculator"]')) document.querySelector('.nav-item[data-page="calculator"]').classList.remove('hidden');
+                    if (queueManagementNavEl) queueManagementNavEl.classList.remove('hidden');
+                    if (adminMenuEl) adminMenuEl.classList.remove('hidden');
+                    if (dentistsNavItem) dentistsNavItem.classList.remove('hidden');
+                    if (settingsNavItem) settingsNavItem.classList.remove('hidden');
+
+                    const adminDentistFilterEl = document.getElementById('admin-dentist-filter');
+                    if (adminDentistFilterEl) adminDentistFilterEl.classList.remove('hidden');
+                    const adminHistoryActionsHeaderEl = document.getElementById('admin-history-actions-header');
+                    if (adminHistoryActionsHeaderEl) adminHistoryActionsHeaderEl.classList.remove('hidden');
+                    const dentistsActionsHeaderEl = document.getElementById('dentists-actions-header');
+                    if (dentistsActionsHeaderEl) dentistsActionsHeaderEl.classList.remove('hidden');
+                    const proceduresActionsHeaderEl = document.getElementById('procedures-actions-header');
+                    if (proceduresActionsHeaderEl) proceduresActionsHeaderEl.classList.remove('hidden');
+                    const paymentsActionsHeaderEl = document.getElementById('payments-actions-header');
+                    if (paymentsActionsHeaderEl) paymentsActionsHeaderEl.classList.remove('hidden');
+
+                    const mainAppEl = document.getElementById('main-app');
+                    if (mainAppEl) mainAppEl.classList.remove('hidden');
+                    showPage('dashboard');
+
+                } else if (user.role === 'receptionist') {
+                    console.log("handleLogin: Perfil Recepcionista.");
+                    if (document.querySelector('.nav-item[data-page="commission"]')) document.querySelector('.nav-item[data-page="commission"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="history"]')) document.querySelector('.nav-item[data-page="history"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="calculator"]')) document.querySelector('.nav-item[data-page="calculator"]').classList.remove('hidden');
+                    if (queueManagementNavEl) queueManagementNavEl.classList.remove('hidden');
+                    if (dentistsNavItem) dentistsNavItem.classList.remove('hidden');
+
+                    const adminDentistFilterEl = document.getElementById('admin-dentist-filter');
+                    if (adminDentistFilterEl) adminDentistFilterEl.classList.remove('hidden');
+                    const adminHistoryActionsHeaderEl = document.getElementById('admin-history-actions-header');
+                    if (adminHistoryActionsHeaderEl) adminHistoryActionsHeaderEl.classList.add('hidden');
+                    const dentistsActionsHeaderEl = document.getElementById('dentists-actions-header');
+                    if (dentistsActionsHeaderEl) dentistsActionsHeaderEl.classList.add('hidden');
+
+                    const mainAppEl = document.getElementById('main-app');
+                    if (mainAppEl) mainAppEl.classList.remove('hidden');
+                    showPage('commission');
+
+                } else if (user.role === 'dentist') {
+                    console.log("handleLogin: Perfil Dentista.");
+                    if (dashboardNavItem) dashboardNavItem.classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="commission"]')) document.querySelector('.nav-item[data-page="commission"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="history"]')) document.querySelector('.nav-item[data-page="history"]').classList.remove('hidden');
+                    if (document.querySelector('.nav-item[data-page="calculator"]')) document.querySelector('.nav-item[data-page="calculator"]').classList.remove('hidden');
+
+                    if (user.specialization === 'Especialista') {
+                        if (specialistReportNavEl) specialistReportNavEl.classList.remove('hidden');
+                    }
+
+                    const adminDentistFilterEl = document.getElementById('admin-dentist-filter');
+                    if (adminDentistFilterEl) adminDentistFilterEl.classList.add('hidden');
+                    const adminHistoryActionsHeaderEl = document.getElementById('admin-history-actions-header');
+                    if (adminHistoryActionsHeaderEl) adminHistoryActionsHeaderEl.classList.add('hidden');
+                    const dentistsActionsHeaderEl = document.getElementById('dentists-actions-header');
+                    if (dentistsActionsHeaderEl) dentistsActionsHeaderEl.classList.add('hidden');
+
+                    const mainAppEl = document.getElementById('main-app');
+                    if (mainAppEl) mainAppEl.classList.remove('hidden');
+                    showPage('dashboard');
+                } else if (user.role === 'queue_viewer') {
+                    console.log("handleLogin: Perfil Visualizador de Fila.");
+                    document.getElementById('login-page').classList.add('hidden'); // Hide login page
+                    document.getElementById('queue-display-standalone-page').classList.remove('hidden'); // Show public queue
+                    renderPublicQueue();
+                }
+
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+            } else {
+                showToast('Utilizador ou palavra-passe incorretos.', 'error');
+            }
+            console.log("handleLogin: Fim da função.");
+        }
+
+        function handleRegister(e) {
+            console.log("handleRegister: Início da função.");
+            e.preventDefault();
+
+            const registerName = document.getElementById('register-name');
+            const registerBirth = document.getElementById('register-birth');
+            const registerCpf = document.getElementById('register-cpf');
+            const registerCro = document.getElementById('register-cro');
+
+            if (!registerName || !registerBirth || !registerCpf || !registerCro) {
+                console.error("handleRegister: Elementos de registo não encontrados.");
+                showToast('Erro interno: elementos de registo não encontrados.', 'error');
+                return;
+            }
+
+            const name = registerName.value.trim();
+            const birth = registerBirth.value;
+            const cpf = registerCpf.value.trim();
+            const cro = registerCro.value.trim();
+            const specialization = 'Clínico General';
+
+            if (!name || !birth || !cpf || !cro) {
+                showToast('Por favor, preencha todos os campos para se registar.', 'error');
+                return;
+            }
+
+            if (userData.users.some(u => u.cpf === cpf)) {
+                showToast('CPF já registado. Use outro ou faça login.', 'error');
+                return;
+            }
+
+            const newUser = {
+                id: userData.users.length ? Math.max(...userData.users.map(u => u.id)) + 1 : 1,
+                name,
+                birth,
+                cpf,
+                cro,
+                password: cpf,
+                role: 'dentist',
+                specialization: specialization
+            };
+
+            userData.users.push(newUser);
+            saveToLocalStorage('users', userData.users);
+
+            showToast('Registo realizado com sucesso! Faça login com o seu CPF.', 'success');
+
+            registerName.value = '';
+            registerBirth.value = '';
+            registerCpf.value = '';
+            registerCro.value = '';
+
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+            console.log("handleRegister: Fim da função.");
+        }
+
+        function handleLogout() {
+            console.log("handleLogout: Início da função.");
+            document.getElementById('user-name').textContent = ''; // Clear username display
+            userData.currentUser = null;
+
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('queue-display-standalone-page').classList.add('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(navItem => navItem.classList.remove('hidden')); // Show all nav items initially
+            document.getElementById('specialist-report-nav').classList.add('hidden'); // Hide specialist nav by default
+            document.getElementById('admin-menu').classList.add('hidden'); // Hide admin menu by default
+            document.querySelector('.nav-item[data-page="dentists"]').classList.add('hidden'); // Hide dentists nav by default
+
+            document.querySelectorAll('.nav-item').forEach(navItem => navItem.classList.remove('active-nav'));
+            const defaultActiveNavItem = document.querySelector('[data-page="dashboard"]');
+            if (defaultActiveNavItem) defaultActiveNavItem.classList.add('active-nav');
+            console.log("handleLogout: Fim da função.");
+        }
+
+        function showPage(pageId) {
+            console.log(`showPage: Tentando mostrar página ${pageId}.`);
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.add('hidden');
+            });
+
+            const targetPageElement = document.getElementById(`${pageId}-page`);
+            if (targetPageElement) {
+                targetPageElement.classList.remove('hidden');
+                console.log(`showPage: Página ${pageId} encontrada e exibida.`);
+            } else {
+                console.error(`showPage: Página com ID ${pageId}-page não encontrada.`);
+                return;
+            }
+
+            if (pageId === 'dashboard') {
+                updateDashboard();
+            } else if (pageId === 'history') {
+                loadHistory();
+            } else if (pageId === 'commission') {
+                populateProceduresSelect();
+                populatePaymentMethodsSelect();
+                populateResponsibleDentistSelect();
+            } else if (pageId === 'specialist-report' && userData.currentUser && userData.currentUser.role === 'dentist' && userData.currentUser.specialization === 'Especialista') {
+                loadSpecialistReports();
+            } else if (pageId === 'dentists') {
+                loadDentists();
+                populateDentistFilter();
+                const dentistsTableMain = document.getElementById('dentists-table-main');
+                if (dentistsTableMain) {
+                    if (userData.currentUser && userData.currentUser.role === 'admin') {
+                        dentistsTableMain.classList.remove('hide-dentist-actions');
+                    } else {
+                        dentistsTableMain.classList.add('hide-dentist-actions');
+                    }
+                }
+            } else if (pageId === 'settings' && userData.currentUser && userData.currentUser.role === 'admin') {
+                loadProcedures();
+                loadPaymentMethods();
+                const proceduresTableMain = document.getElementById('procedures-table-main');
+                const paymentsTableMain = document.getElementById('payments-table-main');
+                if (proceduresTableMain) proceduresTableMain.classList.remove('hide-actions');
+                if (paymentsTableMain) paymentsTableMain.classList.remove('hide-actions');
+            } else if (pageId === 'settings' && userData.currentUser && userData.currentUser.role !== 'admin') {
+                const settingsPage = document.getElementById('settings-page');
+                if (settingsPage) settingsPage.classList.add('hidden');
+            } else if (pageId === 'queue-management') {
+                renderQueue();
+            }
+            console.log(`showPage: Fim da lógica para ${pageId}.`);
+        }
+
+        function updateDashboard() {
+            console.log("updateDashboard: Início da função.");
+            const totalCommissionEl = document.getElementById('total-commission');
+            const totalProceduresEl = document.getElementById('total-procedures');
+            const totalValueEl = document.getElementById('total-value');
+            const recentProceduresEl = document.getElementById('recent-procedures');
+
+            if (!totalCommissionEl || !totalProceduresEl || !totalValueEl || !recentProceduresEl) {
+                console.warn("updateDashboard: Elementos do Dashboard não encontrados. Dashboard pode não ser atualizado.");
+                return;
+            }
+
+            let filteredRecords = [];
+            if (userData.currentUser && (userData.currentUser.role === 'admin' || userData.currentUser.role === 'receptionist')) {
+                filteredRecords = userData.records;
+            } else if (userData.currentUser && userData.currentUser.role === 'dentist') {
+                filteredRecords = userData.records.filter(r => r.dentistId === userData.currentUser.id);
+            }
+
+            const totalCommission = filteredRecords.reduce((sum, record) => sum + record.commission, 0);
+            const totalValue = filteredRecords.reduce((sum, record) => sum + record.value, 0);
+
+            totalCommissionEl.textContent = formatCurrency(totalCommission);
+            totalProceduresEl.textContent = filteredRecords.length;
+            totalValueEl.textContent = formatCurrency(totalValue);
+
+            recentProceduresEl.innerHTML = '';
+
+            const sortedRecords = [...filteredRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const recentRecords = sortedRecords.slice(0, 5);
+
+            if (recentRecords.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum procedimento registado</td>`;
+                recentProceduresEl.appendChild(row);
+            } else {
+                recentRecords.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(record.date)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.patient}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.procedure}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(record.value)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">${formatCurrency(record.commission)}</td>
+                    `;
+
+                    recentProceduresEl.appendChild(row);
+                });
+            }
+            console.log("updateDashboard: Fim da função.");
+        }
+
+
+        // --- Patient Registration Standalone Functions ---
+        function loadPatientsStandalone() {
+            console.log("loadPatientsStandalone: Início da função.");
+            const patientsListStandalone = document.getElementById('patients-list-standalone');
+            if (!patientsListStandalone) {
+                console.error("loadPatientsStandalone: Elemento 'patients-list-standalone' não encontrado.");
+                return;
+            }
+
+            patientsListStandalone.innerHTML = '';
+
+            if (userData.patients.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum paciente registado.</td>`;
+                patientsListStandalone.appendChild(row);
+            } else {
+                userData.patients.forEach(patient => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${patient.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${patient.cpf}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${patient.phone || 'N/A'}</td>
+                    `;
+                    patientsListStandalone.appendChild(row);
+                });
+            }
+            console.log("loadPatientsStandalone: Fim da função.");
+        }
+
+        function addPatientStandalone(e) {
+            console.log("addPatientStandalone: Início da função.");
+            e.preventDefault();
+
+            const patientNameInput = document.getElementById('patient-name-standalone');
+            const patientCpfInput = document.getElementById('patient-cpf-standalone');
+            const patientBirthInput = document.getElementById('patient-birth-standalone');
+            const patientPhoneInput = document.getElementById('patient-phone-standalone');
+            const patientAddressInput = document.getElementById('patient-address-standalone');
+
+            if (!patientNameInput || !patientCpfInput || !patientBirthInput || !patientPhoneInput || !patientAddressInput) {
+                console.error("addPatientStandalone: Elementos do formulário de registo de paciente (standalone) não encontrados.");
+                showToast('Erro interno: elementos do formulário não encontrados.', 'error');
+                return;
+            }
+
+            const name = patientNameInput.value.trim();
+            const cpf = patientCpfInput.value.trim();
+            const birth = patientBirthInput.value;
+            const phone = patientPhoneInput.value.trim();
+            const address = patientAddressInput.value.trim();
+
+            if (!name || !cpf || !birth) {
+                showToast('Nome, CPF e Data de Nascimento são campos obrigatórios.', 'error');
+                return;
+            }
+
+            if (userData.patients.some(p => p.cpf === cpf)) {
+                showToast('Já existe um paciente com este CPF.', 'error');
+                return;
+            }
+
+            const newPatient = {
+                id: userData.patients.length ? Math.max(...userData.patients.map(p => p.id)) + 1 : 1,
+                name,
+                cpf,
+                birth,
+                phone,
+                address
+            };
+
+            userData.patients.push(newPatient);
+            saveToLocalStorage('patients', userData.patients);
+
+            showToast('Paciente registado com sucesso!', 'success');
+            document.getElementById('patient-registration-standalone-form').reset();
+            loadPatientsStandalone();
+            console.log("addPatientStandalone: Fim da função.");
+        }
+
+
+        // --- Dentists Management Functions (Admin & Receptionist) ---
+        function loadDentists() {
+            console.log("loadDentists: Início da função.");
+            const dentistsTable = document.getElementById('dentists-table');
+            const dentistsTableMain = document.getElementById('dentists-table-main');
+
+            if (!dentistsTable || !dentistsTableMain) {
+                console.error("loadDentists: Elementos da tabela de dentistas não encontrados. Verifique o HTML.");
+                return;
+            }
+
+            dentistsTable.innerHTML = '';
+            const dentistsOnly = userData.users.filter(u => u.role === 'dentist');
+
+            if (userData.currentUser && userData.currentUser.role === 'admin') {
+                dentistsTableMain.classList.remove('hide-dentist-actions');
+            } else {
+                dentistsTableMain.classList.add('hide-dentist-actions');
+            }
+
+
+            if (dentistsOnly.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum dentista registado.</td>`;
+                dentistsTable.appendChild(row);
+            } else {
+                dentistsOnly.forEach(dentist => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${dentist.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dentist.cpf}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dentist.cro}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(dentist.birth)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dentist.specialization || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900" onclick="openDentistModal(${dentist.id})">Editar</button>
+                            <button class="text-red-600 hover:text-red-900 ml-4" onclick="deleteDentist(${dentist.id})">Excluir</button>
+                        </td>
+                    `;
+                    dentistsTable.appendChild(row);
+                });
+            }
+            console.log("loadDentists: Fim da função.");
+        }
+
+        function openDentistModal(dentistId = null) {
+            console.log("openDentistModal: Início da função.");
+            const modalTitle = document.getElementById('dentist-modal-title');
+            const submitBtn = document.getElementById('dentist-modal-submit-btn');
+            const dentistModal = document.getElementById('dentist-modal');
+            const dentistForm = document.getElementById('dentist-form');
+
+            if (!modalTitle || !submitBtn || !dentistModal || !dentistForm) {
+                console.error("openDentistModal: Elementos do modal de dentista não encontrados.");
+                return;
+            }
+
+            dentistForm.reset();
+            document.getElementById('modal-dentist-id').value = '';
+
+            if (dentistId) {
+                modalTitle.textContent = 'Editar Dentista';
+                submitBtn.textContent = 'Atualizar';
+                const dentist = userData.users.find(u => u.id === dentistId && u.role === 'dentist');
+                if (dentist) {
+                    document.getElementById('modal-dentist-id').value = dentist.id;
+                    document.getElementById('modal-dentist-name').value = dentist.name;
+                    document.getElementById('modal-dentist-birth').value = dentist.birth;
+                    document.getElementById('modal-dentist-cpf').value = dentist.cpf;
+                    document.getElementById('modal-dentist-cro').value = dentist.cro;
+                    document.getElementById('modal-dentist-specialization').value = dentist.specialization || 'Clínico Geral';
+                }
+            } else {
+                modalTitle.textContent = 'Adicionar Dentista';
+                submitBtn.textContent = 'Salvar';
+                document.getElementById('modal-dentist-specialization').value = 'Clínico Geral';
+            }
+            dentistModal.classList.remove('hidden');
+            modalOverlay.classList.remove('hidden');
+            console.log("openDentistModal: Fim da função.");
+        }
+
+        function addDentist(e) {
+            console.log("addDentist: Início da função.");
+            e.preventDefault();
+
+            const id = document.getElementById('modal-dentist-id').value;
+            const name = document.getElementById('modal-dentist-name').value.trim();
+            const birth = document.getElementById('modal-dentist-birth').value;
+            const cpf = document.getElementById('modal-dentist-cpf').value.trim();
+            const cro = document.getElementById('modal-dentist-cro').value.trim();
+            const specialization = document.getElementById('modal-dentist-specialization').value;
+
+            if (!name || !birth || !cpf || !cro || !specialization) {
+                showToast('Por favor, preencha todos os campos do dentista.', 'error');
+                return;
+            }
+
+            if (id) {
+                const index = userData.users.findIndex(u => u.id === parseInt(id) && u.role === 'dentist');
+                if (index > -1) {
+                    if (userData.users[index].cpf !== cpf && userData.users.some(u => u.cpf === cpf && u.id !== parseInt(id))) {
+                        showToast('CPF já registado para outro utilizador.', 'error');
+                        return;
+                    }
+                    userData.users[index] = { ...userData.users[index], name, birth, cpf, cro, specialization };
+                    saveToLocalStorage('users', userData.users);
+                    showToast('Dentista atualizado com sucesso!', 'success');
+                }
+            } else {
+                if (userData.users.some(u => u.cpf === cpf)) {
+                    showToast('Já existe um utilizador registado com este CPF.', 'error');
+                    return;
+                }
+                const newDentist = {
+                    id: userData.users.length ? Math.max(...userData.users.map(u => u.id)) + 1 : 1,
+                    name,
+                    birth,
+                    cpf,
+                    cro,
+                    password: cpf,
+                    role: 'dentist',
+                    specialization: specialization
+                };
+                userData.users.push(newDentist);
+                saveToLocalStorage('users', userData.users);
+                showToast('Dentista adicionado com sucesso!', 'success');
+            }
+
+            closeModal();
+            loadDentists();
+            populateDentistFilter();
+            populateResponsibleDentistSelect();
+            console.log("addDentist: Fim da função.");
+        }
+
+        function deleteDentist(id) {
+            console.log("deleteDentist: Início da função.");
+            showConfirmationModal('Tem certeza que deseja excluir este dentista? Procedimentos já registados por ele PERMANECERÃO no histórico, mas serão associados a um "Dentista Removido".', () => {
+                const index = userData.users.findIndex(u => u.id === id && u.role === 'dentist');
+                if (index > -1) {
+                    userData.users.splice(index, 1);
+                    saveToLocalStorage('users', userData.users);
+
+                    showToast('Dentista excluído com sucesso!', 'success');
+                    loadDentists();
+                    populateDentistFilter();
+                    populateResponsibleDentistSelect();
+                    updateDashboard();
+                    loadHistory();
+                }
+            });
+            console.log("deleteDentist: Fim da função.");
+        }
+
+
+        function populateDentistFilter() {
+            console.log("populateDentistFilter: Início da função.");
+            const dentistFilterSelect = document.getElementById('dentist-filter');
+            if (!dentistFilterSelect) {
+                console.warn("populateDentistFilter: Elemento 'dentist-filter' não encontrado.");
+                return;
+            }
+
+            dentistFilterSelect.innerHTML = '<option value="">Todos</option>';
+            const dentistsOnly = userData.users.filter(u => u.role === 'dentist');
+
+            dentistsOnly.forEach(dentist => {
+                const option = document.createElement('option');
+                option.value = dentist.id;
+                option.textContent = dentist.name;
+                dentistFilterSelect.appendChild(option);
+            });
+            console.log("populateDentistFilter: Fim da função.");
+        }
+
+
+        // --- Settings Page Functions (Admin Only) ---
+        function loadProcedures() {
+            console.log("loadProcedures: Início da função.");
+            const proceduresTable = document.getElementById('procedures-table');
+            const proceduresTableMain = document.getElementById('procedures-table-main');
+
+            if (!proceduresTable || !proceduresTableMain) {
+                console.error("loadProcedures: Elementos da tabela de procedimentos não encontrados. Verifique o HTML.");
+                return;
+            }
+
+            proceduresTable.innerHTML = '';
+
+            if (userData.currentUser && userData.currentUser.role === 'admin') {
+                proceduresTableMain.classList.remove('hide-actions');
+            } else {
+                proceduresTableMain.classList.add('hide-actions');
+            }
+
+
+            if (userData.procedures.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum procedimento registado.</td>`;
+                proceduresTable.appendChild(row);
+            } else {
+                userData.procedures.forEach(proc => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${proc.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(proc.cost)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900" onclick="openProcedureModal(${proc.id})">Editar</button>
+                            <button class="text-red-600 hover:text-red-900 ml-4" onclick="deleteProcedure(${proc.id})">Excluir</button>
+                        </td>
+                    `;
+                    proceduresTable.appendChild(row);
+                });
+            }
+            console.log("loadProcedures: Fim da função.");
+        }
+
+        function openProcedureModal(procedureId = null) {
+            console.log("openProcedureModal: Início da função.");
+            const modalTitle = document.getElementById('procedure-modal-title');
+            const submitBtn = document.getElementById('procedure-modal-submit-btn');
+            const procedureModal = document.getElementById('procedure-modal');
+            const procedureForm = document.getElementById('procedure-form');
+
+            if (!modalTitle || !submitBtn || !procedureModal || !procedureForm) {
+                console.error("openProcedureModal: Elementos do modal de procedimento não encontrados.");
+                return;
+            }
+
+            procedureForm.reset();
+            document.getElementById('modal-procedure-id').value = '';
+
+            if (procedureId) {
+                modalTitle.textContent = 'Editar Procedimento';
+                submitBtn.textContent = 'Atualizar';
+                const procedure = userData.procedures.find(p => p.id === procedureId);
+                if (procedure) {
+                    document.getElementById('modal-procedure-id').value = procedure.id;
+                    document.getElementById('modal-procedure-name').value = procedure.name;
+                    document.getElementById('modal-procedure-cost').value = procedure.cost;
+                }
+            } else {
+                modalTitle.textContent = 'Adicionar Procedimento';
+                submitBtn.textContent = 'Salvar';
+            }
+            procedureModal.classList.remove('hidden');
+            modalOverlay.classList.remove('hidden');
+            console.log("openProcedureModal: Fim da função.");
+        }
+
+        function addProcedure(e) {
+            console.log("addProcedure: Início da função.");
+            e.preventDefault();
+            const id = document.getElementById('modal-procedure-id').value;
+            const name = document.getElementById('modal-procedure-name').value.trim();
+            const cost = parseFloat(document.getElementById('modal-procedure-cost').value);
+
+            if (!name || isNaN(cost) || cost < 0) {
+                showToast('Preencha o nome do procedimento e um custo válido (número positivo).', 'error');
+                return;
+            }
+
+            if (id) {
+                const index = userData.procedures.findIndex(p => p.id === parseInt(id));
+                if (index > -1) {
+                    if (userData.procedures[index].name.toLowerCase() !== name.toLowerCase() && userData.procedures.some(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== parseInt(id))) {
+                        showToast('Já existe um procedimento com este nome.', 'error');
+                        return;
+                    }
+                    userData.procedures[index] = { id: parseInt(id), name, cost };
+                    saveToLocalStorage('procedures', userData.procedures);
+                    showToast('Procedimento atualizado com sucesso!', 'success');
+                }
+            } else {
+                if (userData.procedures.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                    showToast('Já existe um procedimento com este nome.', 'error');
+                    return;
+                }
+                const newProcedure = {
+                    id: userData.procedures.length ? Math.max(...userData.procedures.map(p => p.id)) + 1 : 1,
+                    name,
+                    cost
+                };
+                userData.procedures.push(newProcedure);
+                saveToLocalStorage('procedures', userData.procedures);
+                showToast('Procedimento adicionado com sucesso!', 'success');
+            }
+
+            closeModal();
+            loadProcedures();
+            populateProceduresSelect();
+            console.log("addProcedure: Fim da função.");
+        }
+
+        function deleteProcedure(id) {
+            console.log("deleteProcedure: Início da função.");
+            showConfirmationModal('Tem certeza que deseja excluir este procedimento? Isso não afetará registos passados que usaram este procedimento.', () => {
+                const index = userData.procedures.findIndex(p => p.id === id);
+                if (index > -1) {
+                    userData.procedures.splice(index, 1);
+                    saveToLocalStorage('procedures', userData.procedures);
+                    showToast('Procedimento excluído com sucesso!', 'success');
+                    loadProcedures();
+                    populateProceduresSelect();
+                }
+            });
+            console.log("deleteProcedure: Fim da função.");
+        }
+
+
+        function loadPaymentMethods() {
+            console.log("loadPaymentMethods: Início da função.");
+            const paymentsTable = document.getElementById('payments-table');
+            const paymentsTableMain = document.getElementById('payments-table-main');
+
+            if (!paymentsTable || !paymentsTableMain) {
+                console.error("loadPaymentMethods: Elementos da tabela de pagamentos não encontrados. Verifique o HTML.");
+                return;
+            }
+
+            paymentsTable.innerHTML = '';
+
+            if (userData.currentUser && userData.currentUser.role === 'admin') {
+                paymentsTableMain.classList.remove('hide-actions');
+            } else {
+                paymentsTableMain.classList.add('hide-actions');
+            }
+
+            if (userData.paymentMethods.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Nenhuma forma de pagamento registada.</td>`;
+                paymentsTable.appendChild(row);
+            } else {
+                userData.paymentMethods.forEach(method => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${method.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${method.tax.toFixed(2)}%</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900" onclick="openPaymentModal(${method.id})">Editar</button>
+                            <button class="text-red-600 hover:text-red-900 ml-4" onclick="deletePaymentMethod(${method.id})">Excluir</button>
+                        </td>
+                    `;
+                    paymentsTable.appendChild(row);
+                });
+            }
+            console.log("loadPaymentMethods: Fim da função.");
+        }
+
+        function openPaymentModal(paymentId = null) {
+            console.log("openPaymentModal: Início da função.");
+            const modalTitle = document.getElementById('payment-modal-title');
+            const submitBtn = document.getElementById('payment-modal-submit-btn');
+            const paymentModal = document.getElementById('payment-modal');
+            const paymentForm = document.getElementById('payment-form');
+
+            if (!modalTitle || !submitBtn || !paymentModal || !paymentForm) {
+                console.error("openPaymentModal: Elementos do modal de pagamento não encontrados.");
+                return;
+            }
+
+            paymentForm.reset();
+            document.getElementById('modal-payment-id').value = '';
+
+            if (paymentId) {
+                modalTitle.textContent = 'Editar Forma de Pagamento';
+                submitBtn.textContent = 'Atualizar';
+                const payment = userData.paymentMethods.find(p => p.id === paymentId);
+                if (payment) {
+                    document.getElementById('modal-payment-id').value = payment.id;
+                    document.getElementById('modal-payment-name').value = payment.name;
+                    document.getElementById('modal-payment-tax').value = payment.tax;
+                }
+            } else {
+                modalTitle.textContent = 'Adicionar Forma de Pagamento';
+                submitBtn.textContent = 'Salvar';
+            }
+            paymentModal.classList.remove('hidden');
+            modalOverlay.classList.remove('hidden');
+            console.log("openPaymentModal: Fim da função.");
+        }
+
+        function addPaymentMethod(e) {
+            console.log("addPaymentMethod: Início da função.");
+            e.preventDefault();
+            const id = document.getElementById('modal-payment-id').value;
+            const name = document.getElementById('modal-payment-name').value.trim();
+            const tax = parseFloat(document.getElementById('modal-payment-tax').value);
+
+            if (!name || isNaN(tax) || tax < 0) {
+                showToast('Preencha o nome da forma de pagamento e uma taxa válida (número positivo).', 'error');
+                return;
+            }
+
+            if (id) {
+                const index = userData.paymentMethods.findIndex(p => p.id === parseInt(id));
+                if (index > -1) {
+                    if (userData.paymentMethods[index].name.toLowerCase() !== name.toLowerCase() && userData.paymentMethods.some(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== parseInt(id))) {
+                        showToast('Já existe uma forma de pagamento com este nome.', 'error');
+                        return;
+                    }
+                    userData.paymentMethods[index] = { id: parseInt(id), name, tax };
+                    saveToLocalStorage('paymentMethods', userData.paymentMethods);
+                    showToast('Forma de pagamento atualizada com sucesso!', 'success');
+                }
+            } else {
+                if (userData.paymentMethods.some(pm => pm.name.toLowerCase() === name.toLowerCase())) {
+                    showToast('Já existe uma forma de pagamento com este nome.', 'error');
+                    return;
+                }
+                const newPaymentMethod = {
+                    id: userData.paymentMethods.length ? Math.max(...userData.paymentMethods.map(pm => pm.id)) + 1 : 1,
+                    name,
+                    tax
+                };
+                userData.paymentMethods.push(newPaymentMethod);
+                saveToLocalStorage('paymentMethods', userData.paymentMethods);
+                showToast('Forma de pagamento adicionada com sucesso!', 'success');
+            }
+
+            closeModal();
+            loadPaymentMethods();
+            populatePaymentMethodsSelect();
+            console.log("addPaymentMethod: Fim da função.");
+        }
+
+        function deletePaymentMethod(id) {
+            console.log("deletePaymentMethod: Início da função.");
+            showConfirmationModal('Tem certeza que deseja excluir esta forma de pagamento? Isso não afetará registos passados.', () => {
+                const index = userData.paymentMethods.findIndex(pm => pm.id === id);
+                if (index > -1) {
+                    userData.paymentMethods.splice(index, 1);
+                    saveToLocalStorage('paymentMethods', userData.paymentMethods);
+                    showToast('Forma de pagamento excluída com sucesso!', 'success');
+                    loadPaymentMethods();
+                    populatePaymentMethodsSelect();
+                }
+            });
+            console.log("deletePaymentMethod: Fim da função.");
+        }
+
+        // --- Specialist Report Functions ---
+        function loadSpecialistReports() {
+            console.log("loadSpecialistReports: Início da função.");
+            const specialistReportTable = document.getElementById('specialist-report-table');
+            const specialistTotalTreatments = document.getElementById('specialist-total-treatments');
+            const specialistTotalPaidValue = document.getElementById('specialist-total-paid-value');
+            const specialistTotalCommission = document.getElementById('specialist-total-commission');
+
+            if (!specialistReportTable || !specialistTotalTreatments || !specialistTotalPaidValue || !specialistTotalCommission) {
+                console.error("loadSpecialistReports: Elementos do relatório de especialista não encontrados. Verifique o HTML.");
+                return;
+            }
+
+            specialistReportTable.innerHTML = '';
+            let totalTreatments = 0;
+            let totalPaidValue = 0;
+            let totalCommission = 0;
+
+            const filteredReports = userData.specialistReports.filter(report => userData.currentUser && report.dentistId === userData.currentUser.id);
+
+            if (filteredReports.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum tratamento registado por este especialista.</td>`;
+                specialistReportTable.appendChild(row);
+            } else {
+                filteredReports.forEach(report => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(report.date)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${report.patientName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${report.treatmentName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(report.paidValue)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">${formatCurrency(report.commission)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-red-600 hover:text-red-900 ml-4" onclick="deleteSpecialistReport(${report.id})">Excluir</button>
+                        </td>
+                    `;
+                    specialistReportTable.appendChild(row);
+
+                    totalTreatments++;
+                    totalPaidValue += report.paidValue;
+                    totalCommission += report.commission;
+                });
+            }
+
+            specialistTotalTreatments.textContent = totalTreatments;
+            specialistTotalPaidValue.textContent = formatCurrency(totalPaidValue);
+            specialistTotalCommission.textContent = formatCurrency(totalCommission);
+            console.log("loadSpecialistReports: Fim da função.");
+        }
+
+        function addSpecialistReport(e) {
+            console.log("addSpecialistReport: Início da função.");
+            e.preventDefault();
+
+            const patientNameInput = document.getElementById('patient-name-specialist');
+            const treatmentNameInput = document.getElementById('treatment-name-specialist');
+            const paidValueInput = document.getElementById('paid-value-specialist');
+            const treatmentDateInput = document.getElementById('treatment-date-specialist');
+
+            if (!patientNameInput || !treatmentNameInput || !paidValueInput || !treatmentDateInput) {
+                console.error("addSpecialistReport: Elementos do formulário de relatório de especialista não encontrados.");
+                showToast('Erro interno: elementos do formulário não encontrados.', 'error');
+                return;
+            }
+
+            const patientName = patientNameInput.value.trim();
+            const treatmentName = treatmentNameInput.value.trim();
+            const paidValue = parseFloat(paidValueInput.value);
+            const treatmentDate = treatmentDateInput.value;
+
+            if (!patientName || !treatmentName || isNaN(paidValue) || paidValue <= 0 || !treatmentDate) {
+                showToast('Por favor, preencha todos os campos do tratamento.', 'error');
+                return;
+            }
+
+            const commission = paidValue * 0.25;
+
+            const newReport = {
+                id: userData.specialistReports.length ? Math.max(...userData.specialistReports.map(r => r.id)) + 1 : 1,
+                dentistId: userData.currentUser.id,
+                patientName,
+                treatmentName,
+                paidValue,
+                date: treatmentDate,
+                commission
+            };
+
+            userData.specialistReports.push(newReport);
+            saveToLocalStorage('specialistReports', userData.specialistReports);
+
+            showToast('Tratamento registado com sucesso!', 'success');
+            document.getElementById('specialist-report-form').reset();
+            if (treatmentDateInput) treatmentDateInput.value = today;
+            loadSpecialistReports();
+            console.log("addSpecialistReport: Fim da função.");
+        }
+
+        function deleteSpecialistReport(id) {
+            console.log("deleteSpecialistReport: Início da função.");
+            showConfirmationModal('Tem certeza que deseja excluir este registo de tratamento de especialista?', () => {
+                const index = userData.specialistReports.findIndex(r => r.id === id);
+                if (index > -1) {
+                    userData.specialistReports.splice(index, 1);
+                    saveToLocalStorage('specialistReports', userData.specialistReports);
+                    showToast('Registo de tratamento excluído com sucesso!', 'success');
+                    loadSpecialistReports();
+                }
+            });
+            console.log("deleteSpecialistReport: Fim da função.");
+        }
+
+        async function generateTreatmentSuggestions() {
+            console.log("generateTreatmentSuggestions: Início da função.");
+            const suggestionsOutput = document.getElementById('suggestions-output');
+            const loadingSpinner = document.getElementById('suggestions-loading-spinner');
+            
+            if (!suggestionsOutput || !loadingSpinner) {
+                console.error("generateTreatmentSuggestions: Elementos de sugestões de tratamento não encontrados.");
+                showToast('Erro interno: elementos de sugestões não encontrados.', 'error');
+                return;
+            }
+
+            suggestionsOutput.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+
+            const lastReport = userData.specialistReports
+                .filter(r => userData.currentUser && r.dentistId === userData.currentUser.id)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+            if (!lastReport) {
+                showToast('Nenhum tratamento recente para gerar sugestões.', 'info');
+                loadingSpinner.classList.add('hidden');
+                return;
+            }
+
+            const prompt = `Gerar sugestões concisas para cuidados pós-tratamento, próximos passos e uma breve explicação amigável para o paciente ${lastReport.patientName}, que realizou o tratamento de ${lastReport.treatmentName} com um valor de ${formatCurrency(lastReport.paidValue)}.`;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    suggestionsOutput.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+                    suggestionsOutput.classList.remove('hidden');
+                } else {
+                    suggestionsOutput.innerHTML = '<p>Não foi possível gerar sugestões neste momento. Tente novamente.</p>';
+                    suggestionsOutput.classList.remove('hidden');
+                    showToast('Erro ao gerar sugestões.', 'error');
+                }
+            } catch (error) {
+                console.error('generateTreatmentSuggestions: Erro ao chamar a API Gemini:', error);
+                suggestionsOutput.innerHTML = '<p>Ocorreu um erro ao comunicar com o serviço de IA. Por favor, tente mais tarde.</p>';
+                suggestionsOutput.classList.remove('hidden');
+                showToast('Erro de conexão com a IA.', 'error');
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+            console.log("generateTreatmentSuggestions: Fim da função.");
+        }
+
+        // --- Queue Management Functions ---
+        let selectedPatientForQueue = null;
+
+        function openQueueModal() {
+            console.log("openQueueModal: Início da função.");
+            const queueModal = document.getElementById('queue-modal');
+            const queueModalSearchInput = document.getElementById('queue-modal-search-input');
+            const queueModalSearchResults = document.getElementById('queue-modal-search-results');
+            const queueModalSelectedPatientInfo = document.getElementById('queue-modal-selected-patient-info');
+            const addSelectedToQueueBtn = document.getElementById('add-selected-to-queue-btn');
+
+            if (!queueModal || !queueModalSearchInput || !queueModalSearchResults || !queueModalSelectedPatientInfo || !addSelectedToQueueBtn) {
+                console.error("openQueueModal: Elementos do modal da fila não encontrados.");
+                return;
+            }
+
+            queueModalSearchInput.value = '';
+            queueModalSearchResults.innerHTML = '';
+            queueModalSearchResults.classList.add('hidden');
+            queueModalSelectedPatientInfo.classList.add('hidden');
+            addSelectedToQueueBtn.disabled = true;
+            selectedPatientForQueue = null;
+
+            queueModal.classList.remove('hidden');
+            modalOverlay.classList.remove('hidden');
+            console.log("openQueueModal: Fim da função.");
+        }
+
+        function searchPatientsForQueue(e) {
+            console.log("searchPatientsForQueue: Início da função.");
+            const searchTerm = e.target.value.toLowerCase();
+            const queueModalSearchResults = document.getElementById('queue-modal-search-results');
+            const addSelectedToQueueBtn = document.getElementById('add-selected-to-queue-btn');
+            const queueModalSelectedPatientInfo = document.getElementById('queue-modal-selected-patient-info');
+
+            if (!queueModalSearchResults || !addSelectedToQueueBtn || !queueModalSelectedPatientInfo) {
+                console.error("searchPatientsForQueue: Elementos de busca da fila não encontrados.");
+                return;
+            }
+
+            queueModalSearchResults.innerHTML = '';
+            queueModalSelectedPatientInfo.classList.add('hidden');
+            addSelectedToQueueBtn.disabled = true;
+            selectedPatientForQueue = null;
+
+            if (searchTerm.length < 2) {
+                queueModalSearchResults.classList.add('hidden');
+                console.log("searchPatientsForQueue: Termo de busca muito curto.");
+                return;
+            }
+
+            const filteredPatients = userData.patients.filter(patient =>
+                patient.name.toLowerCase().includes(searchTerm) ||
+                patient.cpf.includes(searchTerm)
+            ).sort((a, b) => { // Sort by most recently added first
+                return b.id - a.id;
+            });
+
+            if (filteredPatients.length > 0) {
+                filteredPatients.forEach(patient => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item p-2 cursor-pointer hover:bg-blue-100';
+                    div.textContent = `${patient.name} (${patient.cpf})`;
+                    div.onclick = () => selectPatientForQueue(patient);
+                    queueModalSearchResults.appendChild(div);
+                });
+                queueModalSearchResults.classList.remove('hidden');
+                console.log("searchPatientsForQueue: Pacientes encontrados.");
+            } else {
+                queueModalSearchResults.classList.add('hidden');
+                console.log("searchPatientsForQueue: Nenhum paciente encontrado.");
+            }
+            console.log("searchPatientsForQueue: Fim da função.");
+        }
+
+        function selectPatientForQueue(patient) {
+            console.log("selectPatientForQueue: Início da função.");
+            selectedPatientForQueue = patient;
+            const queueModalSearchInput = document.getElementById('queue-modal-search-input');
+            const queueModalSearchResults = document.getElementById('queue-modal-search-results');
+            const queueModalSelectedPatientInfo = document.getElementById('queue-modal-selected-patient-info');
+            const selectedPatientName = document.getElementById('queue-modal-selected-patient-name');
+            const selectedPatientCpf = document.getElementById('queue-modal-selected-patient-cpf');
+            const addSelectedToQueueBtn = document.getElementById('add-selected-to-queue-btn');
+
+            if (queueModalSearchInput) queueModalSearchInput.value = patient.name;
+            if (queueModalSearchResults) queueModalSearchResults.classList.add('hidden');
+            if (selectedPatientName) selectedPatientName.textContent = patient.name;
+            if (selectedPatientCpf) selectedPatientCpf.textContent = patient.cpf;
+            if (queueModalSelectedPatientInfo) queueModalSelectedPatientInfo.classList.remove('hidden');
+            if (addSelectedToQueueBtn) addSelectedToQueueBtn.disabled = false;
+            console.log("selectPatientForQueue: Paciente selecionado.", patient);
+            console.log("selectPatientForQueue: Fim da função.");
+        }
+
+        function addSelectedPatientToQueue() {
+            console.log("addSelectedPatientToQueue: Início da função.");
+            if (!selectedPatientForQueue) {
+                showToast('Selecione um paciente para adicionar à fila.', 'error');
+                console.log("addSelectedPatientToQueue: Nenhum paciente selecionado.");
+                return;
+            }
+
+            const now = new Date();
+            const queueEntry = {
+                id: now.getTime(), // Unique ID based on timestamp
+                patientId: selectedPatientForQueue.id,
+                patientName: selectedPatientForQueue.name,
+                patientCpf: selectedPatientForQueue.cpf,
+                timeIn: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                status: 'Aguardando'
+            };
+
+            userData.queue.push(queueEntry);
+            saveToLocalStorage('queue', userData.queue);
+            showToast('Paciente adicionado à fila!', 'success');
+            closeModal();
+            renderQueue();
+            renderPublicQueue();
+            console.log("addSelectedPatientToQueue: Paciente adicionado à fila.", queueEntry);
+            console.log("addSelectedPatientToQueue: Fim da função.");
+        }
+
+        function renderQueue() {
+            console.log("renderQueue: Início da função.");
+            const currentQueueList = document.getElementById('current-queue-list');
+            const nextPatientCallDisplay = document.getElementById('next-patient-call-display');
+            const calledPatientName = document.getElementById('called-patient-name');
+            const callNextBtn = document.getElementById('call-next-btn');
+
+            if (!currentQueueList || !nextPatientCallDisplay || !calledPatientName || !callNextBtn) {
+                console.error("renderQueue: Elementos da fila de gestão não encontrados.");
+                return;
+            }
+
+            currentQueueList.innerHTML = '';
+            nextPatientCallDisplay.classList.add('hidden');
+            calledPatientName.textContent = '';
+            callNextBtn.disabled = userData.queue.length === 0;
+
+            if (userData.queue.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">A fila está vazia.</td>`;
+                currentQueueList.appendChild(row);
+                console.log("renderQueue: Fila vazia.");
+            } else {
+                userData.queue.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.patientName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.patientCpf}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.timeIn}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.status}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-red-600 hover:text-red-900 ml-4" onclick="removePatientFromQueue(${item.id})">Remover</button>
+                        </td>
+                    `;
+                    currentQueueList.appendChild(row);
+                });
+                console.log("renderQueue: Fila renderizada com", userData.queue.length, "itens.");
+            }
+            console.log("renderQueue: Fim da função.");
+        }
+
+        function callNextPatient() {
+            console.log("callNextPatient: Início da função.");
+            if (userData.queue.length > 0) {
+                const nextPatient = userData.queue.shift(); // Remove first patient
+                saveToLocalStorage('queue', userData.queue);
+
+                const nextPatientDisplay = document.getElementById('next-patient-display');
+                const calledPatientName = document.getElementById('called-patient-name');
+                const publicQueueList = document.getElementById('public-queue-list');
+
+                if (nextPatientDisplay && calledPatientName && publicQueueList) {
+                    calledPatientName.textContent = nextPatient.patientName;
+                    nextPatientDisplay.classList.remove('hidden');
+                    nextPatientDisplay.classList.add('bg-yellow-100', 'text-yellow-800');
+                    nextPatientDisplay.classList.remove('bg-blue-100', 'text-blue-800');
+
+                    renderPublicQueue();
+                }
+                showToast(`Paciente ${nextPatient.patientName} chamado!`, 'info');
+                renderQueue();
+                console.log("callNextPatient: Paciente chamado.", nextPatient);
+            } else {
+                showToast('A fila está vazia.', 'info');
+                console.log("callNextPatient: Fila vazia, nenhum paciente para chamar.");
+            }
+            console.log("callNextPatient: Fim da função.");
+        }
+
+        function removePatientFromQueue(id) {
+            console.log("removePatientFromQueue: Início da função para ID", id);
+            showConfirmationModal('Tem certeza que deseja remover este paciente da fila?', () => {
+                const index = userData.queue.findIndex(item => item.id === id);
+                if (index > -1) {
+                    const removedPatient = userData.queue.splice(index, 1)[0];
+                    saveToLocalStorage('queue', userData.queue);
+                    showToast(`Paciente ${removedPatient.patientName} removido da fila.`, 'success');
+                    renderQueue();
+                    renderPublicQueue();
+                    console.log("removePatientFromQueue: Paciente removido.", removedPatient);
+                } else {
+                    console.warn("removePatientFromQueue: Paciente com ID", id, "não encontrado na fila.");
+                }
+            });
+            console.log("removePatientFromQueue: Fim da função.");
+        }
+
+        function renderPublicQueue() {
+            console.log("renderPublicQueue: Início da função.");
+            const publicQueueList = document.getElementById('public-queue-list');
+            const nextPatientDisplay = document.getElementById('next-patient-display');
+            const calledPatientName = document.getElementById('called-patient-name');
+
+            if (!publicQueueList || !nextPatientDisplay || !calledPatientName) {
+                console.error("renderPublicQueue: Elementos da fila pública não encontrados.");
+                return;
+            }
+
+            publicQueueList.innerHTML = '';
+
+            if (userData.queue.length === 0) {
+                nextPatientDisplay.textContent = 'Nenhum paciente na fila';
+                nextPatientDisplay.classList.remove('bg-yellow-100', 'text-yellow-800');
+                nextPatientDisplay.classList.add('bg-blue-100', 'text-blue-800');
+                console.log("renderPublicQueue: Fila pública vazia.");
+            } else {
+                const nextPatient = userData.queue[0];
+                calledPatientName.textContent = nextPatient.patientName;
+                nextPatientDisplay.classList.remove('hidden');
+                nextPatientDisplay.classList.add('bg-yellow-100', 'text-yellow-800');
+                nextPatientDisplay.classList.remove('bg-blue-100', 'text-blue-800');
+
+                userData.queue.slice(1).forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'py-2 px-4 flex justify-between items-center';
+                    li.innerHTML = `
+                        <span>${item.patientName}</span>
+                        <span class="text-sm text-gray-500">${item.timeIn}</span>
+                    `;
+                    publicQueueList.appendChild(li);
+                });
+                console.log("renderPublicQueue: Fila pública renderizada com", userData.queue.length, "itens.");
+            }
+            console.log("renderPublicQueue: Fim da função.");
+        }
+
+
+        // --- Initial Load and Event Listener Setup ---
+        // Load initial data from localStorage or use defaults
+        userData.users = loadFromLocalStorage('users', userData.defaultUsers);
+        userData.procedures = loadFromLocalStorage('procedures', userData.defaultProcedures);
+        userData.paymentMethods = loadFromLocalStorage('paymentMethods', userData.defaultPaymentMethods);
+        userData.records = loadFromLocalStorage('records', userData.defaultRecords);
+        userData.specialistReports = loadFromLocalStorage('specialistReports', []);
+        userData.patients = loadFromLocalStorage('patients', []);
+        userData.queue = loadFromLocalStorage('queue', []);
+
+
+        const today = new Date().toISOString().split('T')[0];
+        const serviceDateElement = document.getElementById('service-date');
+        if (serviceDateElement) {
+            serviceDateElement.value = today;
+        }
+        const treatmentDateSpecialistElement = document.getElementById('treatment-date-specialist');
+        if (treatmentDateSpecialistElement) {
+            treatmentDateSpecialistElement.value = today;
+        }
+        const patientBirthStandaloneElement = document.getElementById('patient-birth-standalone');
+        if (patientBirthStandaloneElement) {
+            patientBirthStandaloneElement.value = today;
+        }
+
+
+        window.onload = function() {
+            console.log("window.onload: Documento e recursos totalmente carregados. Iniciando atribuições DOM e listeners.");
+            
+            // Assign DOM elements here
+            const loginPage = document.getElementById('login-page');
+            console.log("loginPage encontrado:", loginPage);
+            const registerPage = document.getElementById('register-page');
+            console.log("registerPage encontrado:", registerPage);
+            const mainApp = document.getElementById('main-app');
+            console.log("mainApp encontrado:", mainApp);
+            const loginUsername = document.getElementById('login-username');
+            console.log("loginUsername encontrado:", loginUsername);
+            const loginPassword = document.getElementById('login-password');
+            console.log("loginPassword encontrado:", loginPassword);
+            const loginBtn = document.getElementById('login-btn');
+            console.log("loginBtn encontrado:", loginBtn);
+            const showRegister = document.getElementById('show-register');
+            console.log("showRegister encontrado:", showRegister);
+            const backToLogin = document.getElementById('back-to-login');
+            console.log("backToLogin encontrado:", backToLogin);
+            const registerBtn = document.getElementById('register-btn');
+            console.log("registerBtn encontrado:", registerBtn);
+            const logoutBtn = document.getElementById('logout-btn');
+            console.log("logoutBtn encontrado:", logoutBtn);
+            const userName = document.getElementById('user-name');
+            console.log("userName encontrado:", userName);
+            const adminMenu = document.getElementById('admin-menu');
+            console.log("adminMenu encontrado:", adminMenu);
+            const navItems = document.querySelectorAll('.nav-item');
+            console.log("navItems encontrados:", navItems.length);
+            const pageContents = document.querySelectorAll('.page-content');
+            console.log("pageContents encontrados:", pageContents.length);
+            const modalOverlay = document.getElementById('modal-overlay');
+            console.log("modalOverlay encontrado:", modalOverlay);
+            const closeModalBtns = document.querySelectorAll('.close-modal');
+            console.log("closeModalBtns encontrados:", closeModalBtns.length);
+            const toast = document.getElementById('toast');
+            console.log("toast encontrado:", toast);
+            const toastMessage = document.getElementById('toast-message');
+            console.log("toastMessage encontrado:", toastMessage);
+            const adminDentistFilter = document.getElementById('admin-dentist-filter');
+            console.log("adminDentistFilter encontrado:", adminDentistFilter);
+            const adminHistoryActionsHeader = document.getElementById('admin-history-actions-header');
+            console.log("adminHistoryActionsHeader encontrado:", adminHistoryActionsHeader);
+            const procedureSelect = document.getElementById('procedure');
+            console.log("procedureSelect encontrado:", procedureSelect);
+            const paymentMethodSelect = document.getElementById('payment-method');
+            console.log("paymentMethodSelect encontrado:", paymentMethodSelect);
+            const responsibleDentistSelect = document.getElementById('responsible-dentist');
+            console.log("responsibleDentistSelect encontrado:", responsibleDentistSelect);
+            const specialistReportNav = document.getElementById('specialist-report-nav');
+            console.log("specialistReportNav encontrado:", specialistReportNav);
+            const showPatientRegistrationStandalone = document.getElementById('show-patient-registration-standalone');
+            console.log("showPatientRegistrationStandalone encontrado:", showPatientRegistrationStandalone);
+            const patientRegistrationStandalonePage = document.getElementById('patient-registration-standalone-page');
+            console.log("patientRegistrationStandalonePage encontrado:", patientRegistrationStandalonePage);
+            const backToLoginFromPatient = document.getElementById('back-to-login-from-patient');
+            console.log("backToLoginFromPatient encontrado:", backToLoginFromPatient);
+            const patientRegistrationStandaloneForm = document.getElementById('patient-registration-standalone-form');
+            console.log("patientRegistrationStandaloneForm encontrado:", patientRegistrationStandaloneForm);
+            const showQueueDisplayStandalone = document.getElementById('show-queue-display-standalone');
+            console.log("showQueueDisplayStandalone encontrado:", showQueueDisplayStandalone);
+            const queueDisplayStandalonePage = document.getElementById('queue-display-standalone-page');
+            console.log("queueDisplayStandalonePage encontrado:", queueDisplayStandalonePage);
+            const backToLoginFromQueueDisplay = document.getElementById('back-to-login-from-queue-display');
+            console.log("backToLoginFromQueueDisplay encontrado:", backToLoginFromQueueDisplay);
+            const queueModalSearchInput = document.getElementById('queue-modal-search-input');
+            console.log("queueModalSearchInput encontrado:", queueModalSearchInput);
+            const queueModalSearchResults = document.getElementById('queue-modal-search-results');
+            console.log("queueModalSearchResults encontrado:", queueModalSearchResults);
+            const addSelectedToQueueBtn = document.getElementById('add-selected-to-queue-btn');
+            console.log("addSelectedToQueueBtn encontrado:", addSelectedToQueueBtn);
+            const callNextBtn = document.getElementById('call-next-btn');
+            console.log("callNextBtn encontrado:", callNextBtn);
+
+
+            if (loginBtn instanceof HTMLElement) {
+                console.log("loginBtn é um HTMLElement, anexando listener.");
+                loginBtn.addEventListener('click', handleLogin);
+            } else {
+                console.error("loginBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (showRegister instanceof HTMLElement) {
+                console.log("showRegister é um HTMLElement, anexando listener.");
+                showRegister.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (loginPage) loginPage.classList.add('hidden');
+                    if (registerPage) registerPage.classList.remove('hidden');
+                });
+            } else {
+                console.error("showRegister não é um HTMLElement válido ou não encontrado.");
+            }
+            
+            if (backToLogin instanceof HTMLElement) {
+                console.log("backToLogin é um HTMLElement, anexando listener.");
+                backToLogin.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (registerPage) registerPage.classList.add('hidden');
+                    if (loginPage) loginPage.classList.remove('hidden');
+                });
+            } else {
+                console.error("backToLogin não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (registerBtn instanceof HTMLElement) {
+                console.log("registerBtn é um HTMLElement, anexando listener.");
+                registerBtn.addEventListener('click', handleRegister);
+            } else {
+                console.error("registerBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (logoutBtn instanceof HTMLElement) {
+                console.log("logoutBtn é um HTMLElement, anexando listener.");
+                logoutBtn.addEventListener('click', handleLogout);
+            } else {
+                console.error("logoutBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (showPatientRegistrationStandalone instanceof HTMLElement) {
+                console.log("showPatientRegistrationStandalone é um HTMLElement, anexando listener.");
+                showPatientRegistrationStandalone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (loginPage) loginPage.classList.add('hidden');
+                    if (patientRegistrationStandalonePage) patientRegistrationStandalonePage.classList.remove('hidden');
+                    loadPatientsStandalone();
+                });
+            } else {
+                console.error("showPatientRegistrationStandalone não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (backToLoginFromPatient instanceof HTMLElement) {
+                console.log("backToLoginFromPatient é um HTMLElement, anexando listener.");
+                backToLoginFromPatient.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (patientRegistrationStandalonePage) patientRegistrationStandalonePage.classList.add('hidden');
+                    if (loginPage) loginPage.classList.remove('hidden');
+                });
+            } else {
+                console.error("backToLoginFromPatient não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (patientRegistrationStandaloneForm instanceof HTMLElement) {
+                console.log("patientRegistrationStandaloneForm é um HTMLElement, anexando listener.");
+                patientRegistrationStandaloneForm.addEventListener('submit', addPatientStandalone);
+            } else {
+                console.error("patientRegistrationStandaloneForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (showQueueDisplayStandalone instanceof HTMLElement) {
+                console.log("showQueueDisplayStandalone é um HTMLElement, anexando listener.");
+                showQueueDisplayStandalone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (loginPage) loginPage.classList.add('hidden');
+                    if (queueDisplayStandalonePage) queueDisplayStandalonePage.classList.remove('hidden');
+                    renderPublicQueue();
+                });
+            } else {
+                console.error("showQueueDisplayStandalone não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (backToLoginFromQueueDisplay instanceof HTMLElement) {
+                console.log("backToLoginFromQueueDisplay é um HTMLElement, anexando listener.");
+                backToLoginFromQueueDisplay.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (queueDisplayStandalonePage) queueDisplayStandalonePage.classList.add('hidden');
+                    if (loginPage) loginPage.classList.remove('hidden');
+                });
+            } else {
+                console.error("backToLoginFromQueueDisplay não é um HTMLElement válido ou não encontrado.");
+            }
+
+
+            navItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                    console.log(`Anexando listener para nav-item: ${item.dataset.page}`);
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetPage = item.getAttribute('data-page');
+                        showPage(targetPage);
+
+                        navItems.forEach(navItem => {
+                            navItem.classList.remove('active-nav');
+                        });
+                        item.classList.add('active-nav');
+                    });
+                } else {
+                    console.error("Um nav-item não é um HTMLElement válido:", item);
+                }
+            });
+
+            closeModalBtns.forEach(btn => {
+                if (btn instanceof HTMLElement) {
+                    console.log("closeModalBtn encontrado, anexando listener.");
+                    btn.addEventListener('click', closeModal);
+                } else {
+                    console.error("Um closeModalBtn não é um HTMLElement válido:", btn);
+                }
+            });
+
+            const confirmActionButton = document.getElementById('confirm-action');
+            if (confirmActionButton instanceof HTMLElement) {
+                console.log("confirmActionButton encontrado, anexando listener.");
+                confirmActionButton.addEventListener('click', () => {
+                    if (confirmActionCallback) {
+                        confirmActionCallback();
+                    }
+                    closeModal();
+                });
+            } else {
+                console.error("confirmActionButton não é um HTMLElement válido ou não encontrado.");
+            }
+
+
+            if (document.getElementById('procedure') instanceof HTMLElement) { // Access directly within handler
+                console.log("procedureSelect encontrado, anexando listener.");
+                document.getElementById('procedure').addEventListener('change', updateProcedureValue);
+            } else {
+                console.error("procedureSelect não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const calculateBtn = document.getElementById('calculate-btn');
+            if (calculateBtn instanceof HTMLElement) {
+                console.log("calculateBtn encontrado, anexando listener.");
+                calculateBtn.addEventListener('click', calculateCommission);
+            } else {
+                console.error("calculateBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const commissionForm = document.getElementById('commission-form');
+            if (commissionForm instanceof HTMLElement) {
+                console.log("commissionForm encontrado, anexando listener.");
+                commissionForm.addEventListener('submit', saveCommission);
+            } else {
+                console.error("commissionForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const calculateInstallmentBtn = document.getElementById('calculate-installment-btn');
+            if (calculateInstallmentBtn instanceof HTMLElement) {
+                console.log("calculateInstallmentBtn encontrado, anexando listener.");
+                calculateInstallmentBtn.addEventListener('click', calculateInstallment);
+            } else {
+                console.error("calculateInstallmentBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const filterBtn = document.getElementById('filter-btn');
+            if (filterBtn instanceof HTMLElement) {
+                console.log("filterBtn encontrado, anexando listener.");
+                filterBtn.addEventListener('click', function() {
+                    loadHistory();
+                });
+            } else {
+                console.error("filterBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+
+            const addDentistBtn = document.getElementById('add-dentist-btn');
+            if (addDentistBtn instanceof HTMLElement) {
+                console.log("addDentistBtn encontrado, anexando listener.");
+                addDentistBtn.addEventListener('click', () => openDentistModal());
+            } else {
+                console.error("addDentistBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const addProcedureBtn = document.getElementById('add-procedure-btn');
+            if (addProcedureBtn instanceof HTMLElement) {
+                console.log("addProcedureBtn encontrado, anexando listener.");
+                addProcedureBtn.addEventListener('click', () => openProcedureModal());
+            } else {
+                console.error("addProcedureBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const addPaymentBtn = document.getElementById('add-payment-btn');
+            if (addPaymentBtn instanceof HTMLElement) {
+                console.log("addPaymentBtn encontrado, anexando listener.");
+                addPaymentBtn.addEventListener('click', () => openPaymentModal());
+            } else {
+                console.error("addPaymentBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const dentistForm = document.getElementById('dentist-form');
+            if (dentistForm instanceof HTMLElement) {
+                console.log("dentistForm encontrado, anexando listener.");
+                dentistForm.addEventListener('submit', addDentist);
+            } else {
+                console.error("dentistForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const procedureForm = document.getElementById('procedure-form');
+            if (procedureForm instanceof HTMLElement) {
+                console.log("procedureForm encontrado, anexando listener.");
+                procedureForm.addEventListener('submit', addProcedure);
+            } else {
+                console.error("procedureForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm instanceof HTMLElement) {
+                console.log("paymentForm encontrado, anexando listener.");
+                paymentForm.addEventListener('submit', addPaymentMethod);
+            } else {
+                console.error("paymentForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const specialistReportForm = document.getElementById('specialist-report-form');
+            if (specialistReportForm instanceof HTMLElement) {
+                console.log("specialistReportForm encontrado, anexando listener.");
+                specialistReportForm.addEventListener('submit', addSpecialistReport);
+            } else {
+                console.error("specialistReportForm não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const generateSuggestionsBtn = document.getElementById('generate-suggestions-btn');
+            if (generateSuggestionsBtn instanceof HTMLElement) {
+                console.log("generateSuggestionsBtn encontrado, anexando listener.");
+                generateSuggestionsBtn.addEventListener('click', generateTreatmentSuggestions);
+            } else {
+                console.error("generateSuggestionsBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            const queueManagementNav = document.getElementById('queue-management-nav');
+            if (queueManagementNav instanceof HTMLElement) {
+                console.log("queueManagementNav encontrado, anexando listener.");
+                queueManagementNav.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPage('queue-management');
+                });
+            } else {
+                console.error("queueManagementNav não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (document.getElementById('queue-modal-search-input') instanceof HTMLElement) { // Access directly within handler
+                console.log("queueModalSearchInput encontrado, anexando listener.");
+                document.getElementById('queue-modal-search-input').addEventListener('input', searchPatientsForQueue);
+            } else {
+                console.error("queueModalSearchInput não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (addSelectedToQueueBtn instanceof HTMLElement) {
+                console.log("addSelectedToQueueBtn encontrado, anexando listener.");
+                addSelectedToQueueBtn.addEventListener('click', addSelectedPatientToQueue);
+            } else {
+                console.error("addSelectedToQueueBtn não é um HTMLElement válido ou não encontrado.");
+            }
+
+            if (callNextBtn instanceof HTMLElement) {
+                console.log("callNextBtn encontrado, anexando listener.");
+                callNextBtn.addEventListener('click', callNextPatient);
+            } else {
+                console.error("callNextBtn não é um HTMLElement válido ou não encontrado.");
+            }
+        }; // End of window.onload
+    </script>
+</body>
+</html>
